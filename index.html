@@ -1,0 +1,127 @@
+---
+layout: default
+title: 우아파크골프 - 전국 파크골프장 정보 검색
+description: 전국 227개 파크골프장 위치, 홀 수, 이용요금, 운영기관 정보를 한눈에. 서울·경기·강원·경북·경남·전남·전북·광주·대구·인천·세종 지역별로 무료 검색하세요.
+---
+
+<!-- 히어로 & 검색 -->
+<div class="hero">
+  <h1>⛳ 전국 파크골프장 정보</h1>
+  <p>파크골프장명 또는 지역으로 검색하세요</p>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" class="search-input"
+           placeholder="예) 여의도, 파크골프장, 경기도..."
+           autocomplete="off" aria-label="파크골프장 검색">
+    <button class="search-btn" onclick="doSearch()">🔍 검색</button>
+  </div>
+</div>
+
+<div class="page-with-sidebar">
+<div>
+<!-- 검색 결과 -->
+<div id="search-results"></div>
+
+<!-- 광고 -->
+<div class="top-ad-bar">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6464921081676309" data-ad-slot="7080296704" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<!-- 지역별 찾기 -->
+<div class="section" id="regionBtns">
+  <h2 class="section-title">📍 지역별 파크골프장 찾기</h2>
+  <div class="region-grid">
+    <a href="/region/서울특별시/" class="region-btn"><span class="region-icon">🏙️</span>서울<span class="region-count"></span></a>
+    <a href="/region/경기도/" class="region-btn"><span class="region-icon">🌾</span>경기<span class="region-count"></span></a>
+    <a href="/region/인천광역시/" class="region-btn"><span class="region-icon">⚓</span>인천<span class="region-count"></span></a>
+    <a href="/region/강원특별자치도/" class="region-btn"><span class="region-icon">🏔️</span>강원<span class="region-count"></span></a>
+    <a href="/region/세종특별자치시/" class="region-btn"><span class="region-icon">🌿</span>세종<span class="region-count"></span></a>
+    <a href="/region/전북특별자치도/" class="region-btn"><span class="region-icon">🌾</span>전북<span class="region-count"></span></a>
+    <a href="/region/전라남도/" class="region-btn"><span class="region-icon">🐚</span>전남<span class="region-count"></span></a>
+    <a href="/region/광주광역시/" class="region-btn"><span class="region-icon">🎨</span>광주<span class="region-count"></span></a>
+    <a href="/region/경상북도/" class="region-btn"><span class="region-icon">🍎</span>경북<span class="region-count"></span></a>
+    <a href="/region/경상남도/" class="region-btn"><span class="region-icon">🎋</span>경남<span class="region-count"></span></a>
+    <a href="/region/대구광역시/" class="region-btn"><span class="region-icon">🍑</span>대구<span class="region-count"></span></a>
+  </div>
+</div>
+
+<!-- 이용 안내 -->
+<div style="background:white;">
+<div class="section" style="padding-top:40px;padding-bottom:40px;">
+  <h2 class="section-title">ℹ️ 이용 안내</h2>
+  <ul style="max-width:720px;margin:0 auto;line-height:2;color:#374151;">
+    <li>🚗 상세페이지에서 근처 공영주차장을 <strong>우아파킹</strong>으로 바로 확인할 수 있습니다.</li>
+    <li>💰 이용요금·예약방법은 시설마다 다르며, 무료로 운영되는 곳도 많습니다.</li>
+    <li>📞 정확한 운영시간·휴무일은 방문 전 관리기관에 직접 문의하세요.</li>
+  </ul>
+</div>
+</div>
+</div>
+<aside class="tool-sidebar"></aside>
+</div>
+
+<!-- Fuse.js 검색 -->
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+<script>
+let fuseIndex = null;
+let fuse = null;
+
+async function loadIndex() {
+  if (fuseIndex) return;
+  const resp = await fetch('/search_index.json');
+  fuseIndex = await resp.json();
+  fuse = new Fuse(fuseIndex, {
+    keys: ['name', 'doNm', 'sigunguNm', 'address'],
+    threshold: 0.35,
+    minMatchCharLength: 1,
+  });
+  updateCounts();
+}
+
+function updateCounts() {
+  if (!fuseIndex) return;
+  const counts = {};
+  fuseIndex.forEach(c => { if (c.doNm) counts[c.doNm] = (counts[c.doNm] || 0) + 1; });
+  document.querySelectorAll('.region-btn').forEach(btn => {
+    const doNm = decodeURIComponent(btn.getAttribute('href').split('/')[2] || '');
+    const el = btn.querySelector('.region-count');
+    if (el && counts[doNm]) el.textContent = counts[doNm] + '개';
+  });
+}
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { document.getElementById('search-results').innerHTML = ''; return; }
+  loadIndex().then(() => {
+    const results = fuse ? fuse.search(q).slice(0, 20) : [];
+    const el = document.getElementById('search-results');
+    if (results.length === 0) {
+      el.innerHTML = '<p style="text-align:center;padding:20px;color:#6B7280;">검색 결과가 없습니다.</p>';
+      return;
+    }
+    el.innerHTML = `<div style="max-width:960px;margin:0 auto;padding:0 20px;">
+      <p style="padding:8px 0;font-size:.9rem;color:#6B7280;">"${q}" 검색 결과 ${results.length}개</p>
+      ${results.map(r => searchResultItem(r.item)).join('')}
+    </div>`;
+    el.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+function searchResultItem(c) {
+  return `<div class="search-result-item">
+    <a href="/course/${c.slug}/">
+      <div class="search-result-thumb" style="background:#d1fae5;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border-radius:6px;">⛳</div>
+      <div>
+        <div class="search-result-name">${c.name}</div>
+        <div class="search-result-loc">📍 ${c.doNm || ''} ${c.sigunguNm || ''} · ⛳ ${c.holes || ''}</div>
+      </div>
+    </a>
+  </div>`;
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+loadIndex();
+</script>

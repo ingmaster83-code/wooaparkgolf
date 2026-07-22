@@ -1,0 +1,32 @@
+title: 우아파크골프 - 전국 파크골프장 정보
+description: >-
+  전국 파크골프장 위치, 홀 수, 이용요금, 운영기관 정보를 한눈에.
+  공공데이터 기반 신뢰할 수 있는 파크골프장 정보.
+url: "https://wooaparkgolf.wooahouse.com"
+baseurl: ""
+lang: ko
+timezone: Asia/Seoul
+author: WooaHouse
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - scripts/
+  - "*.py"
+  - "*.log"
+  - "*.txt"
+  - README.md
+  - .gitignore
+  - vendor/
+  - manual/
+  - raw/
+  - _rawdata/

@@ -1,0 +1,128 @@
+---
+layout: default
+---
+
+<div class="page-with-sidebar">
+<div class="camp-page">
+
+  <!-- 브레드크럼 -->
+  <nav class="breadcrumb" aria-label="위치">
+    <a href="/">홈</a>
+    <span>›</span>
+    <a href="/region/{{ page.doNm | uri_escape }}/">{{ page.doNm }}</a>
+    <span>›</span>
+    <span>{{ page.courseName }}</span>
+  </nav>
+
+  <!-- 헤더 -->
+  <div class="camp-header">
+    <div class="camp-tags">
+      {% if page.doNm and page.doNm != "" %}
+      <span class="tag tag-type">📍 {{ page.doNm }} {{ page.sigunguNm }}</span>
+      {% endif %}
+      {% if page.holes and page.holes != "" %}
+      <span class="tag tag-env">⛳ {{ page.holes }}</span>
+      {% endif %}
+      {% if page.fee and page.fee != "" %}
+      <span class="tag tag-safe">💰 {{ page.fee }}</span>
+      {% endif %}
+    </div>
+    <h1 class="camp-title">{{ page.courseName }}</h1>
+  </div>
+
+  <!-- 광고 -->
+  <div class="ad-slot">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6464921081676309" data-ad-slot="7080296704" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!-- 이용 정보 -->
+  <div class="camp-section">
+    <h2>⛳ 이용 정보</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:.92rem;">
+      {% if page.address and page.address != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;width:110px;">위치</td><td>{{ page.address }}</td></tr>
+      {% endif %}
+      {% if page.holes and page.holes != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;">홀 수</td><td>{{ page.holes }}</td></tr>
+      {% endif %}
+      {% if page.area and page.area != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;">면적</td><td>{{ page.area }}</td></tr>
+      {% endif %}
+      {% if page.manager and page.manager != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;">운영기관</td><td>{{ page.manager }}{% if page.tel and page.tel != "" %} · <a href="tel:{{ page.tel }}">{{ page.tel }}</a>{% endif %}</td></tr>
+      {% endif %}
+      {% if page.openDate and page.openDate != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;">개장</td><td>{{ page.openDate }}</td></tr>
+      {% endif %}
+      {% if page.fee and page.fee != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;">이용요금</td><td>{{ page.fee }}</td></tr>
+      {% endif %}
+      {% if page.reservationMethod and page.reservationMethod != "" %}
+      <tr><td style="padding:8px 0;color:#6B7280;">예약방법</td><td>{{ page.reservationMethod }}{% if page.reservationUrl and page.reservationUrl != "" %} · <a href="{{ page.reservationUrl }}" target="_blank" rel="noopener">예약 페이지 →</a>{% endif %}</td></tr>
+      {% endif %}
+    </table>
+  </div>
+
+  <!-- 근처 공영주차장 -->
+  <div class="camp-section">
+    <a href="https://wooaparking.wooahouse.com/지역/{{ page.doNm | uri_escape }}/{{ page.sigunguNm | uri_escape }}.html"
+       target="_blank" rel="noopener" class="reserve-btn secondary">
+      🅿️ {{ page.sigunguNm }} 근처 공영주차장 보기 (우아파킹)
+    </a>
+  </div>
+
+  <!-- 같은 지역 다른 파크골프장 -->
+  <div class="region-camps">
+    <h2>📍 {{ page.doNm }} 다른 파크골프장</h2>
+    <div id="regionCoursesGrid" class="camp-grid"></div>
+    <p style="margin-top:16px;">
+      <a href="/region/{{ page.doNm | uri_escape }}/">{{ page.doNm }} 파크골프장 전체 보기 →</a>
+    </p>
+  </div>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "GolfCourse",
+    "name": "{{ page.courseName | escape }}",
+    "description": "{{ page.description | escape }}",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "{{ page.doNm | escape }}",
+      "addressLocality": "{{ page.sigunguNm | escape }}",
+      "streetAddress": "{{ page.address | escape }}"
+    }{% if page.lat and page.lng %},
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": {{ page.lat }},
+      "longitude": {{ page.lng }}
+    }{% endif %}
+  }
+  </script>
+
+</div>
+<aside class="tool-sidebar"></aside>
+</div>
+
+<script>
+(async () => {
+  const currentSlug = {{ page.slug | jsonify }};
+  const currentDo = {{ page.doNm | jsonify }};
+  try {
+    const resp = await fetch('/search_index.json');
+    const all = await resp.json();
+    const regionCourses = all.filter(c => c.doNm === currentDo && c.slug !== currentSlug).slice(0, 6);
+    if (regionCourses.length > 0) {
+      document.getElementById('regionCoursesGrid').innerHTML = regionCourses.map(c => `
+        <a class="camp-card" href="/course/${c.slug}/">
+          <div class="camp-card-body">
+            <div class="camp-card-name">${c.name}</div>
+            <div class="camp-card-loc">📍 ${c.sigunguNm || ''} · ⛳ ${c.holes || ''}</div>
+          </div>
+        </a>`).join('');
+    }
+  } catch(e) {}
+})();
+</script>
